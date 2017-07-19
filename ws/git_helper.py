@@ -43,12 +43,22 @@ def pull():
     return ret
 
 
+# do git reset & clean before pull
+# git reset --hard HEAD
+# git clean -f -d
+# git pull
+# def reset_and_clean_all_landmark():
+#     repo_landmark.head.reset('HEAD~1', index=True, working_tree=True)
+#     repo_landmark.git.reset('--hard')
+#     repo_landmark.git.clean('-xdf')
+
+
 def pull_landmark():
     def _pull():
         pullinfo = remote_obj_landmark.pull()
         flag = pullinfo[0].flags
         # return flag
-        return GIT_PULL_MSG.get(flag, 'Unknown: ' + str(flag))
+        return GIT_PULL_MSG.get(flag, 'UNKNOWN: ' + str(flag))
 
     if not config['repo_landmark']['git']['enable_sync']:
         return
@@ -59,19 +69,22 @@ def pull_landmark():
 
 
 
-def commit(files=['*'], message=str(datetime.now())):
+def commit(add=[], remove=[], message=str(datetime.now())):
     def _commit(files, message):
         # print repo.untracked_files
-        repo.index.add(files)
+        if len(add) != 0:
+            repo.index.add(add)
+        if len(remove) != 0:
+            repo.index.remove(remove)
         repo.index.commit(message)
 
     if not config['repo']['git']['enable_sync']:
         return
 
     # async
-    if len(files) == 0:
+    if len(add) == 0 and len(remove):
         return
-    p = multiprocessing.Process(target=_commit, args=(files, message,))
+    p = multiprocessing.Process(target=_commit, args=(add, remove, message,))
     p.start()
     return
 
@@ -81,7 +94,7 @@ def push():
         pushinfo = remote_obj.push()
         flag = pushinfo[0].flags
         # return flag
-        print GIT_PUSH_MSG.get(flag, 'Unknown: ' + str(flag))
+        print GIT_PUSH_MSG.get(flag, 'UNKNOWN: ' + str(flag))
 
     if not config['repo']['git']['enable_sync']:
         return
