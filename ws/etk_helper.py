@@ -28,12 +28,13 @@ default_etk_config_str = """{
             "title": {
                 "extraction_policy": "keep_existing"
             },
-          "table": {
-            "field_name": "table",
-            "config": {
-              "classify_tables": "yes",
-              "classification_model": "table_classifier",
-              "sem_types": "sem_labels"
+              "table": {
+                "field_name": "table",
+                "config": {
+                  "classify_tables": "yes",
+                  "classification_model": "table_classifier",
+                  "sem_types": "sem_labels"
+                }
             }
         }
     }
