@@ -166,7 +166,9 @@ def generate_etk_config(project_master_config, webservice_config, project_name, 
         project_master_config, project_name, project_local_path)
     etk_config = add_default_field_extractors(project_master_config, etk_config)
     etk_config = add_kg_enhancement(etk_config)
+    etk_config = add_table_extractor_and_classification(etk_config)
     return etk_config
+
 
 def add_table_extractor_and_classification(etk_config):
     # TODO FIX THIS LATER
@@ -226,65 +228,65 @@ def create_landmark_data_extractor_for_field(mapped_fields, field_name):
     return de
 
 
-def add_table_extractor_config(etk_config=json.loads(default_etk_config_str), table_classifier="some_path",
-                               sem_labels="some_path", sem_labels_mapping="some_path"):
-    # add table extractor to the content_extraction
-    etk_config['content_extraction']['extractors']['table'] = {
-        "field_name": "table",
-        "extraction_policy": "keep_existing"
-    }
-
-    # add pickle to resources
-    pickle = dict()
-    pickle['table_classifier'] = table_classifier
-    pickle['sem_labels'] = sem_labels
-    pickle['sem_labels_mapping'] = sem_labels_mapping
-    etk_config['resources']['pickle'] = pickle
-
-    # add data_extraction
-    de = [
-        {
-            "input_path": [
-                "*.table[*]"
-            ],
-            "fields": {
-                "table_type": {
-                    "extractors": {
-                        "classify_table": {
-                            "config": {
-                                "model": "table_classifier",
-                                "sem_types": "sem_labels"
-                            },
-                            "extraction_policy": "replace"
-                        }
-                    }
-                }
-            }
-        },
-        {
-            "input_path": [
-                "*.table[*].data_extraction.table_type.classify_table.results[*]"
-            ],
-            "fields": {
-                "*": {
-                    "extractors": {
-                        "table_data_extractor": {
-                            "config": {
-                                "method": "rule_based",
-                                "model": "sem_labels_mapping",
-                                "sem_types": "sem_labels"
-                            },
-                            "extraction_policy": "replace"
-                        }
-                    }
-                }
-            }
-        }
-    ]
-    if 'data_extraction' not in etk_config:
-        etk_config['data_extraction'] = list()
-    etk_config['data_extraction'].extend(de)
-    return etk_config
+# def add_table_extractor_config(etk_config=json.loads(default_etk_config_str), table_classifier="some_path",
+#                                sem_labels="some_path", sem_labels_mapping="some_path"):
+#     # add table extractor to the content_extraction
+#     etk_config['content_extraction']['extractors']['table'] = {
+#         "field_name": "table",
+#         "extraction_policy": "keep_existing"
+#     }
+#
+#     # add pickle to resources
+#     pickle = dict()
+#     pickle['table_classifier'] = table_classifier
+#     pickle['sem_labels'] = sem_labels
+#     pickle['sem_labels_mapping'] = sem_labels_mapping
+#     etk_config['resources']['pickle'] = pickle
+#
+#     # add data_extraction
+#     de = [
+#         {
+#             "input_path": [
+#                 "*.table[*]"
+#             ],
+#             "fields": {
+#                 "table_type": {
+#                     "extractors": {
+#                         "classify_table": {
+#                             "config": {
+#                                 "model": "table_classifier",
+#                                 "sem_types": "sem_labels"
+#                             },
+#                             "extraction_policy": "replace"
+#                         }
+#                     }
+#                 }
+#             }
+#         },
+#         {
+#             "input_path": [
+#                 "*.table[*].data_extraction.table_type.classify_table.results[*]"
+#             ],
+#             "fields": {
+#                 "*": {
+#                     "extractors": {
+#                         "table_data_extractor": {
+#                             "config": {
+#                                 "method": "rule_based",
+#                                 "model": "sem_labels_mapping",
+#                                 "sem_types": "sem_labels"
+#                             },
+#                             "extraction_policy": "replace"
+#                         }
+#                     }
+#                 }
+#             }
+#         }
+#     ]
+#     if 'data_extraction' not in etk_config:
+#         etk_config['data_extraction'] = list()
+#     etk_config['data_extraction'].extend(de)
+#     return etk_config
 
 
 def choose_ngram(ngram_distribution):
