@@ -27,6 +27,13 @@ default_etk_config_str = """{
             ],
             "title": {
                 "extraction_policy": "keep_existing"
+            },
+          "table": {
+            "field_name": "table",
+            "config": {
+              "classify_tables": "yes",
+              "classification_model": "table_classifier",
+              "sem_types": "sem_labels"
             }
         }
     }
@@ -161,6 +168,44 @@ def generate_etk_config(project_master_config, webservice_config, project_name, 
     etk_config = add_kg_enhancement(etk_config)
     return etk_config
 
+def add_table_extractor_and_classification(etk_config):
+    # TODO FIX THIS LATER
+    etk_resources_path = '/home/ubuntu/github/etk/etk/resources'
+    table_classifier_file = 'table_cl_model.bin'
+    sem_labels_file = 'HT_attribute_labels.json'
+    sem_labels_mapping_file = 'semantic_labels_mapping.json'
+
+    pickle = dict()
+    pickle['table_classifier'] = '{}/{}'.format(etk_resources_path, table_classifier_file)
+    pickle['sem_labels'] = '{}/{}'.format(etk_resources_path, sem_labels_file)
+    pickle['sem_labels_mapping'] = '{}/{}'.format(etk_resources_path, sem_labels_mapping_file)
+    etk_config['resources']['pickle'] = pickle
+
+    if 'data_extraction' not in etk_config:
+        etk_config['data_extraction'] = list()
+    de_obj = {
+      "input_path": [
+        "content_extraction.table[*]"
+      ],
+      "fields": {
+        "*": {
+          "extractors": {
+            "table_data_extractor": {
+              "config": {
+                "method": "rule_based",
+                "model": "sem_labels_mapping",
+                "sem_types": "sem_labels"
+              },
+              "extraction_policy": "replace"
+            }
+          }
+        }
+      }
+    }
+    etk_config['data_extraction'].append(de_obj)
+    return etk_config
+
+
 
 def create_landmark_data_extractor_for_field(mapped_fields, field_name):
     de = {
@@ -176,7 +221,8 @@ def create_landmark_data_extractor_for_field(mapped_fields, field_name):
     if field_name == 'phone' or field_name == 'email' or field_name == 'posting_date':
         de['extractors']['extract_from_landmark']['config']['post_filter'] = [inferlink_fields_post_filter[field_name]]
     elif 'date' in field_name:
-        de['extractors']['extract_from_landmark']['config']['post_filter'] = [inferlink_fields_post_filter['posting_date']]
+        de['extractors']['extract_from_landmark']['config']['post_filter'] = [
+            inferlink_fields_post_filter['posting_date']]
     return de
 
 
