@@ -118,15 +118,24 @@ def generate_report(master_config, domain_name, inferlink_rules):
         report['total_fields_with_custom_spacy'] = 0
         for k, v in fields.iteritems():
             if k == 'city':
-                city_c_s  = query_es(index,  query=create_query(k, method='create_city_state_country_triple', tlds=inferlink_tlds))['hits']['total']
+                query = {"_source":["knowledge_graph"],
+                        "query": {
+                            "filtered": {
+                               "query": {"match_all": {}},
+                               "filter": {
+                                   "exists": {
+                                      "field": "knowledge_graph.city"
+                                   }
+                               }
+                            }
+                        },
+                        "size":0
+                    }
+                city_c_s  = query_es(index,  query=query)['hits']['total']
                 if city_c_s > 0:
                     report['short_tail']['georesolved_city_extractions'][k] = city_c_s
 
-                city_c_l = \
-                    query_es(index,
-                             query=create_query(k, method='create_city_state_country_triple', tlds=inferlink_tlds,
-                                                search_in_tlds=False))[
-                        'hits']['total']
+                city_c_l = query_es(index, query=query)['hits']['total']
                 if city_c_l > 0:
                     report['long_tail']['georesolved_city_extractions'][k] = city_c_l
             if 'glossaries' in v and len(v['glossaries']) > 0:
