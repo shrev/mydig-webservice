@@ -151,8 +151,10 @@ if __name__ == '__main__':
     projects = ["atf_firearms_domain", "ce_domain", "narcotics_domain", "sec_domain"]
     my_dig_projects_path = args[0]
     my_dig_inferlink_path = args[1]
+    output_file = args[2]
     reports = list()
     for project in projects:
         master_config = json.load(codecs.open('{}/{}/{}'.format(my_dig_projects_path, project, 'master_config.json')))
         inferlink_rules = json.load(codecs.open('{}/{}/landmark/consolidated_rules.json'.format(my_dig_inferlink_path, project)))
         reports.append(generate_report(master_config, project, inferlink_rules))
+    codecs.open(output_file, 'w').write(json.dumps(reports))
