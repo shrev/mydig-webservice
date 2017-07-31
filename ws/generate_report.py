@@ -118,23 +118,65 @@ def generate_report(master_config, domain_name, inferlink_rules):
         report['total_fields_with_custom_spacy'] = 0
         for k, v in fields.iteritems():
             if k == 'city':
-                query = {"_source":["knowledge_graph"],
-                        "query": {
-                            "filtered": {
-                               "query": {"match_all": {}},
-                               "filter": {
-                                   "exists": {
-                                      "field": "knowledge_graph.city"
-                                   }
-                               }
+                query = {
+                   "query": {
+                      "filtered": {
+                         "query": {
+                            "match_all": {}
+                         },
+                         "filter": {
+                            "and": {
+                               "filters": [
+                                  {
+                                     "exists": {
+                                        "field": "knowledge_graph.city"
+                                     }
+                                  },
+                                  {
+                                     "terms": {
+                                        "knowledge_graph.website.key": inferlink_tlds
+                                     }
+                                  }
+                               ]
                             }
-                        },
-                        "size":0
-                    }
+                         }
+                      }
+                   },
+                    "size": 0
+                }
                 city_c_s  = query_es(index,  query=query)['hits']['total']
                 if city_c_s > 0:
                     report['short_tail']['georesolved_city_extractions'][k] = city_c_s
 
+                query = {
+                   "query": {
+                      "filtered": {
+                         "query": {
+                            "match_all": {}
+                         },
+                         "filter": {
+                            "and": {
+                               "filters": [
+                                  {
+                                     "exists": {
+                                        "field": "knowledge_graph.city"
+                                     }
+                                  },
+                                  {
+                                     "not": {
+                                        "filter": {
+                                           "terms": {
+                                              "knowledge_graph.website.key": inferlink_tlds
+                                           }
+                                        }
+                                     }
+                                  }
+                               ]
+                            }
+                         }
+                      }
+                   }
+                }
                 city_c_l = query_es(index, query=query)['hits']['total']
                 if city_c_l > 0:
                     report['long_tail']['georesolved_city_extractions'][k] = city_c_l
