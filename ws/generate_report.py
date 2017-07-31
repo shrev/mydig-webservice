@@ -107,6 +107,8 @@ def generate_report(master_config, domain_name, inferlink_rules):
     report['short_tail']['glossary_extractions'] = dict()
     report['long_tail']['custom_spacy_extractions'] = dict()
     report['long_tail']['glossary_extractions'] = dict()
+    report['short_tail']['georesolved_city_extractions'] = dict()
+    report['long_tail']['georesolved_city_extractions'] = dict()
     report['long_tail']['total_docs'] = query_es(index, create_query(tlds=inferlink_tlds, search_in_tlds=False))['hits']['total']
     report['short_tail']['total_docs'] = query_es(index, create_query(tlds=inferlink_tlds))['hits']['total']
     if 'fields' in master_config:
@@ -115,6 +117,18 @@ def generate_report(master_config, domain_name, inferlink_rules):
         report['total_fields_with_glossaries'] = 0
         report['total_fields_with_custom_spacy'] = 0
         for k, v in fields.iteritems():
+            if k == 'city':
+                city_c_s  = query_es(index,  query=create_query(k, method='create_city_state_country_triple', tlds=inferlink_tlds))['hits']['total']
+                if city_c_s > 0:
+                    report['short_tail']['georesolved_city_extractions'][k] = city_c_s
+
+                city_c_l = \
+                    query_es(index,
+                             query=create_query(k, method='create_city_state_country_triple', tlds=inferlink_tlds,
+                                                search_in_tlds=False))[
+                        'hits']['total']
+                if city_c_l > 0:
+                    report['long_tail']['georesolved_city_extractions'][k] = city_c_l
             if 'glossaries' in v and len(v['glossaries']) > 0:
                 report['total_fields_with_glossaries'] += 1
                 gs_s = query_es(index, query=create_query(field_name=k, method='extract_using_dictionary', tlds=inferlink_tlds))['hits']['total']
