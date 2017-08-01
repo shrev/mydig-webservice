@@ -1998,7 +1998,8 @@ class Actions(Resource):
         # pull down rules
         Actions._update_status(project_name, 'pulling rules from github')
         git_resp = git_helper.pull_landmark()
-        if git_resp in ('ERROR', 'REJECTED') or git_resp.startswith('UNKNOWN'):
+        if git_resp is not None and \
+                (git_resp in ('ERROR', 'REJECTED') or git_resp.startswith('UNKNOWN')):
             print 'git resp: {}'.format(git_resp)
             return rest.internal_error('fail of pulling landmark data')
 
@@ -2161,7 +2162,8 @@ if __name__ == '__main__':
     try:
 
         git_resp = git_helper.pull()
-        if git_resp in ('ERROR', 'REJECTED') or git_resp.startswith('UNKNOWN'):
+        if git_resp is not None and \
+                (git_resp in ('ERROR', 'REJECTED') or git_resp.startswith('UNKNOWN')):
             raise Exception('Git pull error')
 
         # init
