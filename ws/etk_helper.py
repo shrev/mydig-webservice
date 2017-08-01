@@ -18,6 +18,11 @@ default_etk_config_str = """{
                     "strict": "yes",
                     "extraction_policy": "keep_existing",
                     "field_name": "content_strict"
+                },
+                {
+                    "strict": "no",
+                    "extraction_policy": "keep_existing",
+                    "field_name": "content_relaxed"
                 }
             ],
             "title": {
@@ -287,7 +292,8 @@ def add_glossary_extraction(etk_config, project_master_config, glossary_dir_path
     # the extraction efficiently
     de_obj['input_path'] = [
         "*.content_strict.text.`parent`",
-        # "*.content_relaxed.text.`parent`",
+        "*.inferlink_posts_special_text.text.`parent`",
+        "*.content_relaxed.text.`parent`",
         "*.title.text.`parent`",
         "*.inferlink_extractions.*.text.`parent`"
     ]
@@ -329,6 +335,7 @@ def add_default_field_extractors(project_master_config, etk_config):
     # the extraction efficiently
     de_obj['input_path'] = [
         "*.content_strict.text.`parent`",
+        "*.inferlink_posts_special_text.text.`parent`",
         "*.content_relaxed.text.`parent`",
         "*.title.text.`parent`",
         "*.inferlink_extractions.*.text.`parent`"
@@ -476,6 +483,7 @@ def add_custom_spacy_extractors(etk_config, project_master_config, project_name,
         "*.content_relaxed.text.`parent`",
         "*.inferlink_extractions.title.text.`parent`",
         "*.inferlink_extractions.description.text.`parent`",
+        "*.inferlink_posts_special_text.text.`parent`",
         "*.title.text.`parent`"
     ]
     de_obj['fields'] = dict()

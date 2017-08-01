@@ -321,8 +321,8 @@ class AllProjects(Resource):
             if 'username' in s:
                 s['credential_id'] = str(idx)
                 credentials[idx] = dict()
-                credentials[idx]['username'] = s['username']
-                credentials[idx]['password'] = s['password']
+                credentials[idx]['username'] = s['username'].strip()
+                credentials[idx]['password'] = s['password'].strip()
                 del s['username']
                 del s['password']
                 idx += 1
@@ -1636,6 +1636,8 @@ class Actions(Resource):
 
         if action_name == 'get_sample_pages':
             return self._get_sample_pages(project_name)
+        if action_name == 'upload_sample_data':
+            return self._upload_sample_data(project_name)
         elif action_name == 'extract_and_load_test_data':
             return self._extract_and_load_test_data(project_name)
         elif action_name == 'extract_and_load_deployed_data':
@@ -2051,12 +2053,23 @@ class Actions(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('pages_per_tld_to_run', required=False, type=int)
         parser.add_argument('pages_extra_to_run', required=False, type=int)
+        parser.add_argument('num_lines_user_data_to_run', required=False, type=int)
         parser.add_argument('force_start_new_extraction', required=False, type=str)
         args = parser.parse_args()
-        pages_per_tld_to_run = 20 if args['pages_per_tld_to_run'] is None else args['pages_per_tld_to_run']
-        pages_extra_to_run = 100 if args['pages_extra_to_run'] is None else args['pages_extra_to_run']
-        force_extraction = True if args['force_start_new_extraction'] is not None and \
-            args['force_start_new_extraction'].lower() == 'true' else False
+        pages_per_tld_to_run = 20 \
+            if 'pages_per_tld_to_run' not in args or args['pages_per_tld_to_run'] is None \
+            else args['pages_per_tld_to_run']
+        pages_extra_to_run = 100 \
+            if 'pages_extra_to_run' not in args or args['pages_extra_to_run'] is None \
+            else args['pages_extra_to_run']
+        lines_user_data_to_run = 500 \
+            if 'lines_user_data_to_run' not in args or args['lines_user_data_to_run'] is None \
+            else args['lines_user_data_to_run']
+        force_extraction = True \
+            if 'force_start_new_extraction' not in args \
+               or args['force_start_new_extraction'] is not None \
+                  and args['force_start_new_extraction'].lower() == 'true' \
+            else False
 
         lock_path = os.path.join(_get_project_dir_path(project_name), 'working_dir/extract_and_load_test_data.lock')
         if force_extraction and os.path.exists(lock_path):
@@ -2075,7 +2088,7 @@ class Actions(Resource):
         # async
         p = multiprocessing.Process(
             target=self._extractor_worker,
-            args=(project_name, pages_per_tld_to_run, pages_extra_to_run))
+            args=(project_name, pages_per_tld_to_run, pages_extra_to_run, lines_user_data_to_run))
         p.start()
         return rest.accepted()
 
@@ -2119,6 +2132,28 @@ class Actions(Resource):
         if resp.status_code // 100 != 2:
             return rest.internal_error('failed to switch index in sandpaper')
         return rest.ok()
+
+    def _upload_sample_data(self, project_name):
+        parse = reqparse.RequestParser()
+        parse.add_argument('data_file', type=werkzeug.FileStorage, location='files')
+        args = parse.parse_args()
+
+        if args['data_file'] is None:
+            return rest.bad_request('Invalid data_file')
+        gzip_file_path = os.path.join(_get_project_dir_path(project_name), 'working_dir/user_data.gz')
+        file_path = os.path.join(_get_project_dir_path(project_name), 'working_dir/user_data.jl')
+        gzip_file = args['data_file']
+        gzip_file.save(gzip_file_path)
+
+        try:
+            with gzip.open(gzip_file_path, 'rb') as input:
+                with open(file_path, 'w') as output:
+                    output.write(input.read())
+        except Exception as e:
+            print e
+            return rest.bad_request('Invalid gzip format')
+
+        return rest.created()
 
 
 if __name__ == '__main__':
