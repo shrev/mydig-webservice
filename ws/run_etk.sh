@@ -47,12 +47,12 @@ rm ${working_dir}/tmp/output_chunk_*
 rm ${working_dir}/etk_progress
 
 # create progress file
-num_of_docs=$(wc -l ${data_file_path} | awk '{print $1}')
-while true; do sleep 5; \
-    wc -l ${working_dir}/tmp/output_chunk_* | tail -n 1 | awk -v total=$num_of_docs '{print total" "$1}' \
-     > ${working_dir}/etk_progress; \
-done &
-progress_job_id=$!
+#num_of_docs=$(wc -l ${data_file_path} | awk '{print $1}')
+#while true; do sleep 5; \
+#    wc -l ${working_dir}/tmp/output_chunk_* | tail -n 1 | awk -v total=$num_of_docs '{print total" "$1}' \
+#     > ${working_dir}/etk_progress; \
+#done &
+#progress_job_id=$!
 
 # run etk parallelly
 python ${etk_path}/etk/run_core.py \
