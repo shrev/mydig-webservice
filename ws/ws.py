@@ -1990,7 +1990,7 @@ class Actions(Resource):
             os.remove(lock_path)
 
     @staticmethod
-    def _extractor_worker(project_name, pages_per_tld_to_run, pages_extra_to_run):
+    def _extractor_worker(project_name, pages_per_tld_to_run, pages_extra_to_run, lines_user_data_to_run):
 
         # pull down rules
         Actions._update_status(project_name, 'pulling rules from github')
@@ -2007,8 +2007,9 @@ class Actions(Resource):
 
         # run etk
         Actions._update_status(project_name, 'etk running')
-        # run_etk.sh page_path working_dir conda_bin_path etk_path num_processes
-        etk_cmd = '{} {} {} {} {} {} {} {}'.format(
+        # run_etk.sh page_path working_dir conda_bin_path etk_path num_processes \
+        # pages_extra_to_run lines_user_data_to_run sandpaper_url ws_url
+        etk_cmd = '{} {} {} {} {} {} {} {} {} {} {}'.format(
             os.path.abspath('run_etk.sh'),
             os.path.abspath(os.path.join(_get_project_dir_path(project_name), 'pages')),
             os.path.abspath(os.path.join(_get_project_dir_path(project_name), 'working_dir')),
@@ -2016,7 +2017,10 @@ class Actions(Resource):
             os.path.abspath(config['etk']['path']),
             config['etk']['number_of_processes'],
             pages_per_tld_to_run,
-            pages_extra_to_run
+            pages_extra_to_run,
+            lines_user_data_to_run,
+            config['sandpaper']['url'],
+            config['sandpaper']['ws_url']
         )
         print etk_cmd
         ret = subprocess.call(etk_cmd, shell=True)
@@ -2025,23 +2029,22 @@ class Actions(Resource):
             return
 
         # upload to sandpaper
-        Actions._update_status(project_name, 'uploading to sandpaper')
-        # upload_to_sandpaper.sh sandpaper_url ws_url project_name index type working_dir
-        sandpaper_cmd = '{} {} {} {} {} {} {}'.format(
-            os.path.abspath('upload_to_sandpaper.sh'),
-            data[project_name]['master_config']['configuration']['sandpaper_sample_url'],
-            config['sandpaper']['ws_url'],
-            project_name,
-            data[project_name]['master_config']['index']['sample'],
-            data[project_name]['master_config']['root_name'],
-            os.path.abspath(os.path.join(_get_project_dir_path(project_name), 'working_dir'))
-        )
-        print sandpaper_cmd
-        ret = subprocess.call(sandpaper_cmd, shell=True)
-        if ret // 100 != 2:
-            Actions._update_status(project_name, 'sandpaper failed', done=True)
-            return
-
+        # Actions._update_status(project_name, 'loading search index')
+        # # upload_to_sandpaper.sh sandpaper_url ws_url project_name index type working_dir
+        # sandpaper_cmd = '{} {} {} {} {} {} {}'.format(
+        #     os.path.abspath('upload_to_sandpaper.sh'),
+        #     data[project_name]['master_config']['configuration']['sandpaper_sample_url'],
+        #     config['sandpaper']['ws_url'],
+        #     project_name,
+        #     data[project_name]['master_config']['index']['sample'],
+        #     data[project_name]['master_config']['root_name'],
+        #     os.path.abspath(os.path.join(_get_project_dir_path(project_name), 'working_dir'))
+        # )
+        # print sandpaper_cmd
+        # ret = subprocess.call(sandpaper_cmd, shell=True)
+        # if ret // 100 != 2:
+        #     Actions._update_status(project_name, 'sandpaper failed', done=True)
+        #     return
         Actions._update_status(project_name, 'done', done=True)
 
     def _extract_and_load_test_data(self, project_name):
