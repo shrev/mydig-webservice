@@ -59,12 +59,13 @@ done &
 progress_job_id=$!
 
 # run etk parallelly
-python ${etk_path}/etk/run_core.py \
+python -u ${etk_path}/etk/run_core.py \
+    --dummy-this-is-mydig-backend-etk-process \
     -i "${data_file_path}" \
     -o "${working_dir}/tmp" \
-    --dummy-this-is-mydig-backend-etk-process \
     -c "${working_dir}/etk_config.json" \
     -m -t ${num_processes} \
+    --batch-enabled \
     --batch-size=100 \
     --batch-http-url="${sandpaper_url}/mapping?url=${ws_url}" \
     --batch-http-headers="{\"Content-Type\": \"application/json\"}" \
