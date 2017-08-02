@@ -101,6 +101,7 @@ def generate_report(master_config, domain_name, inferlink_rules):
     report['short_tail'] = dict()
     report['long_tail'] = dict()
     inferlink_tlds = inferlink_rules.keys()
+    report['rule_names_by_tld'] = count_fields_inferlink_rules(inferlink_rules)
     report['domain_name'] = domain_name
     report['short_tail']['inferlink_extractions'] = dict()
     report['short_tail']['custom_spacy_extractions'] = dict()
@@ -209,6 +210,20 @@ def generate_report(master_config, domain_name, inferlink_rules):
 
 def query_es(index, query):
     return es.search(index=index, body=query)
+
+
+def count_fields_inferlink_rules(consolidated_rules):
+    out = dict()
+    for tld in consolidated_rules.keys():
+        rules_list = consolidated_rules[tld]
+        uniq_rule_names = set()
+        for i in range(0, len(rules_list)):
+            rules = rules_list[i]['rules']
+            for j in range(0, len(rules)):
+                rule = rules[j]
+                uniq_rule_names.add(rule['name'].split('-')[0])
+        out[tld] = list(uniq_rule_names)
+    return out
 
 if __name__ == '__main__':
     parser = OptionParser()
