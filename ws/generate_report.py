@@ -221,7 +221,8 @@ def count_fields_inferlink_rules(consolidated_rules):
             rules = rules_list[i]['rules']
             for j in range(0, len(rules)):
                 rule = rules[j]
-                uniq_rule_names.add(rule['name'].split('-')[0])
+                if 'title' not in rule['name'] and 'description' not in rule['name']:
+                    uniq_rule_names.add(rule['name'].split('-')[0])
         out[tld] = list(uniq_rule_names)
     return out
 
