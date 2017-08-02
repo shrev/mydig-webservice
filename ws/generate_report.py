@@ -213,7 +213,7 @@ def query_es(index, query):
 if __name__ == '__main__':
     parser = OptionParser()
     (c_options, args) = parser.parse_args()
-    projects = ["atf_firearms_domain", "ce_domain", "narcotics_domain", "sec_domain"]
+    projects = ["atf_firearms_domain", "ce_domain", "narcotics_domain", "sec_domain", "domain5"]
     my_dig_projects_path = args[0]
     my_dig_inferlink_path = args[1]
     output_file = args[2]
