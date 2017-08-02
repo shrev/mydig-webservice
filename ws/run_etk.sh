@@ -9,8 +9,20 @@ pages_per_tld_to_run="$6"
 pages_extra_to_run="$7"
 lines_user_data_to_run="$8"
 sandpaper_url="$9"
-ws_url="$10"
-project_es_url="$11"
+ws_url="${10}"
+project_es_url="${11}"
+
+#echo ${page_path}
+#echo ${working_dir}
+#echo ${conda_bin_path}
+#echo ${etk_path}
+#echo ${num_processes}
+#echo ${pages_per_tld_to_run}
+#echo ${pages_extra_to_run}
+#echo ${lines_user_data_to_run}
+#echo ${sandpaper_url}
+#echo ${ws_url}
+#echo ${project_es_url}
 
 # prepare data source
 #data_file_path="${working_dir}/etk_input.jl"
@@ -69,7 +81,7 @@ python -u ${etk_path}/etk/run_core.py \
     --batch-size=100 \
     --batch-http-url="${sandpaper_url}/mapping?url=${ws_url}" \
     --batch-http-headers="{\"Content-Type\": \"application/json\"}" \
-    --batch-dir-path="${working_dir}/tmp" \
+    --batch-dump-path="${working_dir}/tmp" \
     > "${working_dir}/etk_stdout.txt"
 last_exit_code=$?
 
