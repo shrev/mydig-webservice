@@ -9,7 +9,7 @@ pages_per_tld_to_run="$6"
 pages_extra_to_run="$7"
 lines_user_data_to_run="$8"
 sandpaper_url="$9"
-ws_url="${10}"
+index="${10}"
 project_es_url="${11}"
 
 #echo ${page_path}
@@ -79,7 +79,7 @@ python -u ${etk_path}/etk/run_core.py \
     -m -t ${num_processes} \
     --batch-enabled \
     --batch-size=100 \
-    --batch-http-url="${sandpaper_url}/mapping?url=${ws_url}" \
+    --batch-http-url="${sandpaper_url}/indexing?index=${index}" \
     --batch-http-headers="{\"Content-Type\": \"application/json\"}" \
     --batch-dump-path="${working_dir}/tmp" \
     > "${working_dir}/etk_stdout.txt"
