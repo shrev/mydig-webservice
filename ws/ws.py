@@ -2013,7 +2013,7 @@ class Actions(Resource):
         Actions._update_status(project_name, 'etk running')
         # run_etk.sh page_path working_dir conda_bin_path etk_path num_processes \
         # pages_extra_to_run lines_user_data_to_run sandpaper_url ws_url project_es_url
-        etk_cmd = '{} {} {} {} {} {} {} {} {} {} {}'.format(
+        etk_cmd = '{} {} {} {} {} {} {} {} {} {} {} {}'.format(
             os.path.abspath('run_etk.sh'),
             os.path.abspath(os.path.join(_get_project_dir_path(project_name), 'pages')),
             os.path.abspath(os.path.join(_get_project_dir_path(project_name), 'working_dir')),
