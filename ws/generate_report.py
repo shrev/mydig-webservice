@@ -6,6 +6,67 @@ from elasticsearch import Elasticsearch
 es = Elasticsearch(['http://10.1.94.103:9201'])
 
 
+def create_field_exists_query(field_name, tlds, search_in_tlds=True):
+    field_path = 'knowledge_graph.{}'.format(field_name)
+    if search_in_tlds:
+        return {
+            "query": {
+                "filtered": {
+                    "query": {
+                        "match_all": {}
+                    },
+                    "filter": {
+                        "and": {
+                            "filters": [
+                                {
+                                    "exists": {
+                                        "field": field_path
+                                    }
+                                },
+                                {
+                                    "terms": {
+                                        "knowledge_graph.website.key": tlds
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "size": 0
+        }
+    else:
+        return {
+                   "query": {
+                      "filtered": {
+                         "query": {
+                            "match_all": {}
+                         },
+                         "filter": {
+                            "and": {
+                               "filters": [
+                                  {
+                                     "exists": {
+                                        "field": field_path
+                                     }
+                                  },
+                                  {
+                                     "not": {
+                                        "filter": {
+                                           "terms": {
+                                              "knowledge_graph.website.key": tlds
+                                           }
+                                        }
+                                     }
+                                  }
+                               ]
+                            }
+                         }
+                      }
+                   }
+                }
+
+
 def create_query(field_name=None, method=None, tlds=None, search_in_tlds=True):
     if tlds and not field_name and not method:
         if search_in_tlds:
@@ -107,8 +168,8 @@ def generate_report(master_config, domain_name, inferlink_rules):
     report['short_tail']['glossary_extractions'] = dict()
     report['long_tail']['custom_spacy_extractions'] = dict()
     report['long_tail']['glossary_extractions'] = dict()
-    report['short_tail']['georesolved_city_extractions'] = dict()
-    report['long_tail']['georesolved_city_extractions'] = dict()
+    report['short_tail']['total_field_extractions'] = dict()
+    report['long_tail']['total_field_extractions'] = dict()
     report['long_tail']['total_docs'] = query_es(index, create_query(tlds=inferlink_tlds, search_in_tlds=False))['hits']['total']
     report['short_tail']['total_docs'] = query_es(index, create_query(tlds=inferlink_tlds))['hits']['total']
     if 'fields' in master_config:
@@ -118,69 +179,16 @@ def generate_report(master_config, domain_name, inferlink_rules):
         report['total_fields_with_glossaries'] = 0
         report['total_fields_with_custom_spacy'] = 0
         for k, v in fields.iteritems():
-            if k == 'city':
-                query = {
-                   "query": {
-                      "filtered": {
-                         "query": {
-                            "match_all": {}
-                         },
-                         "filter": {
-                            "and": {
-                               "filters": [
-                                  {
-                                     "exists": {
-                                        "field": "knowledge_graph.city"
-                                     }
-                                  },
-                                  {
-                                     "terms": {
-                                        "knowledge_graph.website.key": inferlink_tlds
-                                     }
-                                  }
-                               ]
-                            }
-                         }
-                      }
-                   },
-                    "size": 0
-                }
-                city_c_s  = query_es(index,  query=query)['hits']['total']
-                if city_c_s > 0:
-                    report['short_tail']['georesolved_city_extractions'][k] = city_c_s
+            query = create_field_exists_query(k, inferlink_tlds, search_in_tlds=True)
+            k_c_s = query_es(index,  query=query)['hits']['total']
+            if k_c_s > 0:
+                report['short_tail']['total_field_extractions'][k] = k_c_s
 
-                query = {
-                   "query": {
-                      "filtered": {
-                         "query": {
-                            "match_all": {}
-                         },
-                         "filter": {
-                            "and": {
-                               "filters": [
-                                  {
-                                     "exists": {
-                                        "field": "knowledge_graph.city"
-                                     }
-                                  },
-                                  {
-                                     "not": {
-                                        "filter": {
-                                           "terms": {
-                                              "knowledge_graph.website.key": inferlink_tlds
-                                           }
-                                        }
-                                     }
-                                  }
-                               ]
-                            }
-                         }
-                      }
-                   }
-                }
-                city_c_l = query_es(index, query=query)['hits']['total']
-                if city_c_l > 0:
-                    report['long_tail']['georesolved_city_extractions'][k] = city_c_l
+            query = create_field_exists_query(k, inferlink_tlds, search_in_tlds=False)
+            k_c_l = query_es(index, query=query)['hits']['total']
+            if k_c_l > 0:
+                report['long_tail']['total_field_extractions'][k] = k_c_l
+
             if 'glossaries' in v and len(v['glossaries']) > 0:
                 report['total_fields_with_glossaries'] += 1
                 gs_s = query_es(index, query=create_query(field_name=k, method='extract_using_dictionary', tlds=inferlink_tlds))['hits']['total']
