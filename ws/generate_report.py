@@ -101,7 +101,6 @@ def generate_report(master_config, domain_name, inferlink_rules):
     report['short_tail'] = dict()
     report['long_tail'] = dict()
     inferlink_tlds = inferlink_rules.keys()
-    report['rule_names_by_tld'] = count_fields_inferlink_rules(inferlink_rules)
     report['domain_name'] = domain_name
     report['short_tail']['inferlink_extractions'] = dict()
     report['short_tail']['custom_spacy_extractions'] = dict()
@@ -114,6 +113,7 @@ def generate_report(master_config, domain_name, inferlink_rules):
     report['short_tail']['total_docs'] = query_es(index, create_query(tlds=inferlink_tlds))['hits']['total']
     if 'fields' in master_config:
         fields = master_config['fields']
+        report['rule_names_by_tld'] = count_fields_inferlink_rules(inferlink_rules, fields.keys())
         report['total_fields'] = len(fields.keys())
         report['total_fields_with_glossaries'] = 0
         report['total_fields_with_custom_spacy'] = 0
@@ -212,7 +212,7 @@ def query_es(index, query):
     return es.search(index=index, body=query)
 
 
-def count_fields_inferlink_rules(consolidated_rules):
+def count_fields_inferlink_rules(consolidated_rules, defined_fields):
     out = dict()
     for tld in consolidated_rules.keys():
         rules_list = consolidated_rules[tld]
@@ -221,8 +221,11 @@ def count_fields_inferlink_rules(consolidated_rules):
             rules = rules_list[i]['rules']
             for j in range(0, len(rules)):
                 rule = rules[j]
-                if 'title' not in rule['name'] and 'description' not in rule['name']:
-                    uniq_rule_names.add(rule['name'].split('-')[0])
+                r_name = rule['name']
+                if 'title' not in r_name and 'description' not in r_name:
+                    stripped_name = r_name.split('-')[0]
+                    if stripped_name in defined_fields:
+                        uniq_rule_names.add(stripped_name)
         out[tld] = list(uniq_rule_names)
     return out
 
