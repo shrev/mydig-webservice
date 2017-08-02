@@ -2009,6 +2009,19 @@ class Actions(Resource):
         write_to_file(json.dumps(etk_config, indent=2),
                       os.path.join(_get_project_dir_path(project_name), 'working_dir/etk_config.json'))
 
+        # create index before uploading (running etk)
+        url = '{}/mapping?url={}&project={}&index={}&type={}'.format(
+            data[project_name]['master_config']['configuration']['sandpaper_sample_url'],
+            config['sandpaper']['ws_url'],
+            project_name,
+            data[project_name]['master_config']['index']['sample'],
+            data[project_name]['master_config']['root_name']
+        )
+        resp = requests.post(url, timeout=5)
+        if resp.status_code // 100 != 2:
+            return rest.internal_error('failed to create index in sandpaper')
+        return
+
         # run etk
         Actions._update_status(project_name, 'etk running')
         # run_etk.sh page_path working_dir conda_bin_path etk_path num_processes \
