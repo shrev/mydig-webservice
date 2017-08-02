@@ -226,7 +226,9 @@ def count_fields_inferlink_rules(consolidated_rules, defined_fields):
                     stripped_name = r_name.split('-')[0]
                     if stripped_name in defined_fields:
                         uniq_rule_names.add(stripped_name)
-        out[tld] = list(uniq_rule_names)
+        out[tld] = dict()
+        out[tld]['rules'] = list(uniq_rule_names)
+        out[tld]['count'] = len(list(uniq_rule_names))
     return out
 
 if __name__ == '__main__':
