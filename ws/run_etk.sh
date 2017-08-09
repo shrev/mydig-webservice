@@ -78,7 +78,7 @@ python -u ${etk_path}/etk/run_core.py \
     -c "${working_dir}/etk_config.json" \
     -m -t ${num_processes} \
     --batch-enabled \
-    --batch-size=100 \
+    --batch-size=10 \
     --batch-http-url="${sandpaper_url}/indexing?index=${index}" \
     --batch-http-headers="{\"Content-Type\": \"application/json\"}" \
     --batch-dump-path="${working_dir}/tmp" \
