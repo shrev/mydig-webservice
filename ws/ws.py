@@ -1625,39 +1625,43 @@ class Data(Resource):
             os.mkdir(desc_dir_path)
 
         # generate catalog
+        f = None
         if args['file_type'] == 'json_lines':
-            with codecs.open(src_file_path, 'r') as f:
-                for line in f:
-                    obj = json.loads(line)
-                    if 'url' not in obj:
-                        print 'missing url'
-                        continue
-                    if 'doc_id' not in obj:
-                        print 'missing doc_id'
-                        continue
-                    if 'raw_content' not in obj:
-                        print 'missing raw_content'
-                        continue
-                    if 'timestamp_crawl' not in obj:
-                        obj['timestamp_crawl'] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-                    # split raw_content and json
-                    output_path_prefix = os.path.join(desc_dir_path, obj['doc_id'])
-                    output_raw_content_path = output_path_prefix + '.html'
-                    output_json_path = output_path_prefix + '.json'
-                    with codecs.open(output_raw_content_path, 'w') as output:
-                        output.write(obj['raw_content'].encode('utf-8'))
-                    with codecs.open(output_json_path, 'w') as output:
-                        del obj['raw_content']
-                        output.write(json.dumps(obj, indent=2))
-                    # update data db
-                    tld = self.extract_tld(obj['url'])
-                    data[project_name]['data'][tld] = data[project_name]['data'].get(tld, dict())
-                    data[project_name]['data'][tld][obj['doc_id']] = {
-                        'raw_content_path': output_raw_content_path,
-                        'json_path': output_json_path,
-                        'url': obj['url'],
-                        'add_to_queue': False
-                    }
+            f = codecs.open(src_file_path, 'r')
+        elif args['file_type'] == 'gz':
+            f = gzip.open(src_file_path, 'r')
+        if f:
+            for line in f:
+                obj = json.loads(line)
+                if 'url' not in obj:
+                    print 'missing url'
+                    continue
+                if 'doc_id' not in obj:
+                    print 'missing doc_id'
+                    continue
+                if 'raw_content' not in obj:
+                    print 'missing raw_content'
+                    continue
+                if 'timestamp_crawl' not in obj:
+                    obj['timestamp_crawl'] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+                # split raw_content and json
+                output_path_prefix = os.path.join(desc_dir_path, obj['doc_id'])
+                output_raw_content_path = output_path_prefix + '.html'
+                output_json_path = output_path_prefix + '.json'
+                with codecs.open(output_raw_content_path, 'w') as output:
+                    output.write(obj['raw_content'].encode('utf-8'))
+                with codecs.open(output_json_path, 'w') as output:
+                    del obj['raw_content']
+                    output.write(json.dumps(obj, indent=2))
+                # update data db
+                tld = self.extract_tld(obj['url'])
+                data[project_name]['data'][tld] = data[project_name]['data'].get(tld, dict())
+                data[project_name]['data'][tld][obj['doc_id']] = {
+                    'raw_content_path': output_raw_content_path,
+                    'json_path': output_json_path,
+                    'url': obj['url'],
+                    'add_to_queue': False
+                }
 
             # update data db file
             data_db_path = os.path.join(_get_project_dir_path(project_name), 'data/_db.json')
